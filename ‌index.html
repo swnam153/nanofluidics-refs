@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nanofluidics Reference Manager — v0.0.6</title>
+<style>
+:root {
+  --bg: #f4f6f9;
+  --sidebar-bg: #1a2332;
+  --sidebar-hover: #243044;
+  --sidebar-active: #2563eb;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+  --accent: #2563eb;
+  --accent2: #0ea5e9;
+  --text: #1e293b;
+  --muted: #64748b;
+  --red: #ef4444;
+  --green: #10b981;
+  --orange: #f59e0b;
+  --tag-bg: #eff6ff;
+  --tag-text: #1d4ed8;
+  --deposit-bg: #fefce8;
+  --deposit-border: #fbbf24;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+/* SIDEBAR */
+#sidebar {
+  width: 220px; min-width: 220px; background: var(--sidebar-bg); color: #cbd5e1;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+#sidebar-header { padding: 18px 16px 14px; border-bottom: 1px solid #2d3f5a; }
+#sidebar-header h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 4px; }
+#sidebar-header p { font-size: 13px; font-weight: 600; color: #e2e8f0; line-height: 1.3; }
+#section-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+.sec-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 9px 16px; background: none; border: none;
+  color: #94a3b8; cursor: pointer; font-size: 13px; text-align: left; transition: .15s;
+}
+.sec-btn:hover { background: var(--sidebar-hover); color: #e2e8f0; }
+.sec-btn.active { background: var(--sidebar-active); color: #fff; font-weight: 600; }
+.sec-badge { background: rgba(255,255,255,.15); color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 11px; min-width: 24px; text-align: center; }
+.sec-btn.active .sec-badge { background: rgba(255,255,255,.3); }
+#sidebar-footer { padding: 12px 16px; border-top: 1px solid #2d3f5a; }
+#total-count { font-size: 12px; color: #64748b; }
+
+/* MAIN */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* TOPBAR */
+#topbar {
+  background: #fff; border-bottom: 1px solid var(--border);
+  padding: 12px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+#topbar h1 { font-size: 15px; font-weight: 700; color: var(--text); flex: 1; }
+#search-box {
+  padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 13px; width: 220px; outline: none;
+}
+#search-box:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.btn {
+  padding: 7px 14px; border-radius: 6px; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 600; transition: .15s; white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-green { background: var(--green); color: #fff; }
+.btn-green:hover { background: #059669; }
+.btn-orange { background: var(--orange); color: #fff; }
+
+/* CONTENT */
+#content { flex: 1; overflow-y: auto; padding: 20px; }
+
+/* SECTION HEADER */
+#section-header { margin-bottom: 16px; }
+#section-header h2 { font-size: 20px; font-weight: 700; color: var(--text); }
+#section-header p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.stats-row { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+.stat-chip { background: var(--tag-bg); color: var(--tag-text); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+
+/* REF CARDS */
+#ref-list { display: flex; flex-direction: column; gap: 8px; }
+.ref-card {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 14px; transition: .15s; position: relative;
+}
+.ref-card:hover { border-color: var(--accent2); box-shadow: 0 2px 8px rgba(37,99,235,.08); }
+.ref-card.deposit { background: var(--deposit-bg); border-color: var(--deposit-border); }
+.ref-top { display: flex; align-items: flex-start; gap: 10px; }
+.ref-num {
+  background: var(--accent); color: #fff; border-radius: 6px;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+}
+.ref-num.deposit-num { background: var(--orange); }
+.ref-body { flex: 1; min-width: 0; }
+.ref-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
+.ref-journal { font-size: 12px; color: var(--accent); font-weight: 500; margin-bottom: 4px; }
+.ref-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ref-tag { background: #f1f5f9; color: var(--muted); border-radius: 4px; padding: 2px 6px; font-size: 11px; }
+.ref-tag.pmid { background: #f0fdf4; color: #166534; }
+.ref-tag.doi { background: #fef3c7; color: #92400e; }
+.ref-actions { display: flex; gap: 6px; margin-left: auto; }
+.ref-action-btn {
+  padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border);
+  background: #fff; cursor: pointer; font-size: 11px; color: var(--muted); transition: .15s;
+}
+.ref-action-btn:hover { background: var(--bg); color: var(--text); }
+.ref-action-btn.del:hover { background: #fef2f2; color: var(--red); border-color: var(--red); }
+
+/* DEPOSIT QUEUE */
+#deposit-section { margin-bottom: 20px; }
+#deposit-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  padding: 8px 12px; background: var(--deposit-bg); border: 1px solid var(--deposit-border);
+  border-radius: 6px; cursor: pointer;
+}
+#deposit-header h3 { font-size: 13px; font-weight: 700; color: #92400e; flex: 1; }
+.deposit-arrow { font-size: 12px; color: #92400e; }
+
+/* MODAL */
+#modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 1000; align-items: center; justify-content: center;
+}
+#modal-overlay.open { display: flex; }
+#modal {
+  background: #fff; border-radius: 12px; padding: 24px; width: 560px; max-width: 95vw;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+}
+#modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 8px 11px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 13px; font-family: inherit; outline: none; transition: .15s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+.form-group textarea { resize: vertical; min-height: 60px; }
+#pdf-drop {
+  border: 2px dashed var(--border); border-radius: 8px; padding: 20px;
+  text-align: center; cursor: pointer; transition: .15s; margin-bottom: 14px;
+  color: var(--muted); font-size: 13px;
+}
+#pdf-drop:hover, #pdf-drop.drag-over { border-color: var(--accent); background: var(--tag-bg); color: var(--accent); }
+#pdf-drop input { display: none; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* EXPORT PANEL */
+#export-panel {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 1000; align-items: center; justify-content: center;
+}
+#export-panel.open { display: flex; }
+#export-box {
+  background: #fff; border-radius: 12px; padding: 24px; width: 700px; max-width: 95vw;
+  max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+}
+#export-text { width: 100%; font-family: monospace; font-size: 12px; height: 400px; border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: vertical; }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff;
+  padding: 10px 18px; border-radius: 8px; font-size: 13px; z-index: 9999;
+  opacity: 0; transition: opacity .3s; pointer-events: none;
+}
+#toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h2>Biosensors Manuscript</h2>
+    <p>Nanofluidics via Semiconductor Processes</p>
+  </div>
+  <div id="section-list">
+    <button class="sec-btn active" onclick="switchSection('ALL')" id="btn-ALL">
+      📚 All References <span class="sec-badge" id="badge-ALL">140</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('S1')" id="btn-S1">
+      Introduction <span class="sec-badge" id="badge-S1">0</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('S2')" id="btn-S2">
+      EBL & ALD <span class="sec-badge" id="badge-S2">0</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('S3')" id="btn-S3">
+      Nanowire/Nanotube <span class="sec-badge" id="badge-S3">0</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('S4')" id="btn-S4">
+      Electrofluidics <span class="sec-badge" id="badge-S4">0</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('S5')" id="btn-S5">
+      DNA Transistors <span class="sec-badge" id="badge-S5">0</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('S6')" id="btn-S6">
+      Sacrificial Nanochannels <span class="sec-badge" id="badge-S6">0</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('S7')" id="btn-S7">
+      Exosome <span class="sec-badge" id="badge-S7">0</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('S8')" id="btn-S8">
+      Additive Technology <span class="sec-badge" id="badge-S8">0</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('S9')" id="btn-S9">
+      Review Refs <span class="sec-badge" id="badge-S9">0</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('S0')" id="btn-S0">
+      그외 참고 <span class="sec-badge" id="badge-S0">0</span>
+    </button>
+    <button class="sec-btn" onclick="switchSection('DEPOSIT')" id="btn-DEPOSIT">
+      ⏳ Deposit Queue <span class="sec-badge" id="badge-DEPOSIT">0</span>
+    </button>
+  </div>
+  <div id="sidebar-footer">
+    <div id="total-count">Total: <strong>140</strong> references</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <h1 id="topbar-title">All References (140)</h1>
+    <input type="text" id="search-box" placeholder="🔍  Search title, journal, keyword..." oninput="renderList()">
+    <button class="btn btn-orange" onclick="openExport()">📋 Export</button>
+    <button class="btn btn-green" onclick="openAddModal()">＋ Add Reference</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+    <div id="section-header">
+      <div class="stats-row" id="stats-row"></div>
+    </div>
+
+    <!-- DEPOSIT QUEUE (shown when there are deposits in current section) -->
+    <div id="deposit-section" style="display:none">
+      <div id="deposit-header" onclick="toggleDeposit()">
+        <h3>⏳ Deposit Queue — pending references</h3>
+        <span class="deposit-arrow" id="deposit-arrow">▼</span>
+      </div>
+      <div id="deposit-list"></div>
+    </div>
+
+    <div id="ref-list"></div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal">
+    <h3>➕ Add New Reference</h3>
+    
+    <div id="pdf-drop" onclick="document.getElementById('pdf-input').click()"
+         ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+      <input type="file" id="pdf-input" accept=".pdf" onchange="handleFileSelect(event)">
+      📄 Drop PDF here, or click to select<br>
+      <small style="color:#94a3b8">(Metadata will be extracted from filename)</small>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Section *</label>
+        <select id="form-section">
+          <option value="1. Introduction">1. Introduction</option>
+          <option value="2. EBL and ALD">2. EBL and ALD</option>
+          <option value="3. Nanowire and Nanotube">3. Nanowire and Nanotube</option>
+          <option value="4. Electrofluidics">4. Electrofluidics</option>
+          <option value="5. DNA transistors">5. DNA transistors</option>
+          <option value="6. Sacrificial nanochannels">6. Sacrificial nanochannels</option>
+          <option value="7. Exosome">7. Exosome</option>
+          <option value="8. Additive Technology">8. Additive Technology</option>
+          <option value="9. Additional Review References">9. Additional Review References</option>
+          <option value="그외 참고">그외 참고</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Keyword / Tag</label>
+        <input type="text" id="form-keyword" placeholder="e.g., surface charge, EBL">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Paper Title *</label>
+      <input type="text" id="form-title" placeholder="Full paper title">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Journal / Author / Year *</label>
+        <input type="text" id="form-journal" placeholder="e.g., Nat Nano 2024 Author">
+      </div>
+      <div class="form-group">
+        <label>PMID / DOI</label>
+        <input type="text" id="form-pmid" placeholder="PMID: 12345678 or doi.org/...">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Note</label>
+      <textarea id="form-note" placeholder="Optional notes, relevance to sections..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Status</label>
+      <select id="form-status">
+        <option value="deposit">⏳ Deposit Queue (assign ref# later)</option>
+        <option value="confirmed">✅ Confirmed (assign ref# now)</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitRef()">Add to Deposit Queue</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT PANEL -->
+<div id="export-panel" onclick="closeExport(event)">
+  <div id="export-box">
+    <h3 style="margin-bottom:12px">📋 Export References</h3>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="exportFormat('numbered')">Numbered List</button>
+      <button class="btn btn-secondary" onclick="exportFormat('section')">By Section</button>
+      <button class="btn btn-secondary" onclick="exportFormat('manuscript')">Manuscript [ref. ?] Format</button>
+      <button class="btn btn-primary" onclick="copyExport()">Copy to Clipboard</button>
+      <button class="btn btn-secondary" style="margin-left:auto" onclick="closeExport()">Close</button>
+    </div>
+    <textarea id="export-text" readonly></textarea>
+  </div>
+</div>
+
+<div id="toast">✓ Copied to clipboard</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const SECTIONS = [{"id": "S1", "name": "1. Introduction", "short": "Introduction"}, {"id": "S2", "name": "2. EBL and ALD", "short": "EBL & ALD"}, {"id": "S3", "name": "3. Nanowire and Nanotube", "short": "Nanowire/Nanotube"}, {"id": "S4", "name": "4. Electrofluidics", "short": "Electrofluidics"}, {"id": "S5", "name": "5. DNA transistors", "short": "DNA Transistors"}, {"id": "S6", "name": "6. Sacrificial nanochannels", "short": "Sacrificial Nanochannels"}, {"id": "S7", "name": "7. Exosome", "short": "Exosome"}, {"id": "S8", "name": "8. Additive Technology", "short": "Additive Technology"}, {"id": "S9", "name": "9. Additional Review References", "short": "Review Refs"}, {"id": "S0", "name": "그외 참고", "short": "그외 참고"}];
+
+// Built-in references (from Excel v0.0.6)
+const BUILTIN_REFS = [{"section": "1. Introduction", "pmid_doi": "PMID: 15323836", "keyword": "Surface charge effect", "title": "Surface-Charge-Governed Ion Transport in Nanofluidic Channels", "journal": "PRL Derek Stein 2008", "note": "pH effect polarity", "ref_num": 1}, {"section": "1. Introduction", "pmid_doi": "doi.org/10.1063/1.1954899", "keyword": "Surface charge effect", "title": "Ion transport through nanoslits dominated by the effective surface charge", "journal": "Appl Phys Lett 2005, Reto B. Schoch; Philippe Renaud", "note": "", "ref_num": 2}, {"section": "1. Introduction", "pmid_doi": "PMID: 21113159", "keyword": "", "title": "Anomalous ion transport in 2-nm hydrophilic nanochannels", "journal": "Nat Nano 2010 Arun Majumdar", "note": "mobility", "ref_num": 3}, {"section": "1. Introduction", "pmid_doi": "doi.org/10.1103/RevModPhys.80.839", "keyword": "", "title": "Transport phenomena in nanofluidics", "journal": "Rev Mod Phys 2008 Schoch", "note": "", "ref_num": 4}, {"ref_num": 5, "section": "1. Introduction", "title": "Ion selectivity in nanofluidic channels", "journal": "ACS Nano 2026 Zuzanna Siwy", "pmid_doi": "", "keyword": "surface charge", "note": "Added in v0.0.6"}, {"section": "2. EBL and ALD", "pmid_doi": "doi.org/10.1116/1.3253652", "keyword": "sub-10 nm", "title": "Understanding of hydrogen silsesquioxane electron resist for sub-5-nm-half-pitch lithography", "journal": "JVST B 2009 Jeol", "note": "", "ref_num": 6}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "", "title": "Contrast enhancement behavior of hydrogen silsesquioxane in a salty developer", "journal": "JVST B 2009 Nam", "note": "", "ref_num": 7}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "", "title": "Fabrication of Silicon Nanopillar Teradot Arrays by Electron-Beam Patterning for Nanoimprint Molds", "journal": "Small 2008 Wi", "note": "", "ref_num": 8}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "EB resist development", "title": "New Generation Electron Beam Resists: A Review", "journal": "Chem Mater 2017", "note": "", "ref_num": 9}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "HSQ", "title": "Resists for sub-20-nm electron beam lithography with a focus on HSQ: state of the art", "journal": "Nanotechnology 2009 Delft Univ", "note": "AE Grigorescu and C W Hagen", "ref_num": 10}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "HSQ", "title": "Exposure of Hydrogen Silsesquioxane in Electron Beam Lithography", "journal": "ACS AMI 2025 Shujun Ye", "note": "", "ref_num": 11}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "HSQ", "title": "Medusa 84 SiH - A novel high selectivity electron beam resist for diamond quantum technologies", "journal": "MRS Comm 2025 Elke Neu", "note": "Ref J ECS 2007", "ref_num": 12}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "RIE dimension loss", "title": "Electron-beam lithography patterning of Ge2Sb2Te5 nanostructures using hydrogen silsesquioxane and amorphous Si intermediate layer", "journal": "J Electrochem 2007", "note": "", "ref_num": 13}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "NIL", "title": "Sub-10 nm Self-Enclosed Self-Limited Nanofluidic Channel Arrays", "journal": "Nano Lett 2008 Xia Chou", "note": "", "ref_num": 14}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "", "title": "Liquid faction", "journal": "Nat Nano Chou", "note": "", "ref_num": 15}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "Mixed lithography", "title": "Mixed lithography", "journal": "MRX 2020 Nam", "note": "", "ref_num": 16}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "", "title": "Atomic Image Projection Electron Lithography", "journal": "Adv Mater 2007 Lee", "note": "", "ref_num": 17}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "Size controllability", "title": "Two-step development", "journal": "JVST B 2007 Lee HS", "note": "", "ref_num": 18}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "ALD high aspec ratio", "title": "Small and Simple Molecular Structure Based Thermally Stable Ruthenium Precursor in Advancing Ruthenium ALD Process for Scaled Interconnect Metallization", "journal": "Adv Sci 2025 Kim SH", "note": "", "ref_num": 19}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "", "title": "Surface modification and fabrication of 3D nanostructures by atomic layer deposition", "journal": "MRS Bull 2011 ShinHJ", "note": "", "ref_num": 20}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "post-lithography process", "title": "Sub 10 nm nanochannels", "journal": "Nano Lett 2010 Nam", "note": "", "ref_num": 21}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "wettabliltiy", "title": "TiO2 ALD", "journal": "ACS AMI 2017 Koo", "note": "", "ref_num": 22}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "Review Nanofluidics", "title": "Review article: Fabrication of nanofluidic devices", "journal": "Biomicrofluidics 2003 AIP Chuanhua Duan, BU", "note": "", "ref_num": 23}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "", "title": "Micromachining of Buried Micro Channels in Silicon", "journal": "Journal of Microelectromechanical Systems 2000 M.J. de Boer", "note": "IEEE, SF6 etching, RIE process", "ref_num": 24}, {"section": "2. EBL and ALD", "pmid_doi": "", "keyword": "", "title": "Capillarity Induced Negative Pressure of Water Plugs in Nanochannels", "journal": "Nano Lett 2003 Albert van der Berg", "note": "", "ref_num": 25}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "Nanowire fluidics", "title": "Fabrication of Silica Nanotube Arrays from Vertical Silicon Nanowire Templates", "journal": "JACS 2003 Fan, Yang", "note": "", "ref_num": 26}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Electrostatic control of ions and molecules in nanofluidic transistors", "journal": "Nano Lett 2005 Rohit Karnik", "note": "", "ref_num": 27}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "DNA Translocation in Inorganic Nanotubes", "journal": "Nano Lett 2005 Rong Fan", "note": "", "ref_num": 28}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "Nanowire integrity", "title": "Electric-pulse", "journal": "Science 2012 Nam", "note": "", "ref_num": 29}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "CNT", "title": "Bioinspired carbon nanotube–based nanofluidic ionic transistor with ultrahigh switching capabilities for logic circuits", "journal": "Sci Adv 2024", "note": "", "ref_num": 30}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Aligned Multiwalled Carbon Nanotube Membranes", "journal": "Science 2024 Hinds  University of Kentucky", "note": "Ru(NH3)6 3+ flulx", "ref_num": 31}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Enhanced flow in carbon nanotubes", "journal": "Nature 2005 Bruce Hinds", "note": "Pressure-driven flow", "ref_num": 32}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Fast Mass Transport Through Sub-2-Nanometer Carbon Nanotubes", "journal": "Science 2006 Bakajin Berkeley, Hyung Gyu Park", "note": "Gas selectivity, Postech, XeF2 etcher", "ref_num": 33}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "Graphene nanofluidics", "title": "Size effect in ion transport through angstrom-scale slits", "journal": "Science 2017 Menchester K. Gopinadhan, Geim", "note": "mobility K+ Na Li Ca2+ Mg Fe In3+ Al", "ref_num": 34}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Capillary condensation under atomic-scale confinement", "journal": "Nature 2020 Geim", "note": "", "ref_num": 35}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Molecular transport through capillaries made with atomic-scale precision", "journal": "Nature 2016 Geim", "note": "", "ref_num": 36}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Water friction in nanofluidic channels made from two-dimensional crystals", "journal": "Nat Comm 2021 Radha Boya", "note": "", "ref_num": 37}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Exploring Two-Dimensional Empty Space", "journal": "Nano Lett 2021 Geim", "note": "Viewpoint, Reference list useful", "ref_num": 38}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Complete steric exclusion of ions and proton transport through confined monolayer water", "journal": "Science 2019 Geim", "note": "", "ref_num": 39}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Ballistic molecular transport through two-dimensional channels", "journal": "Nature 2018 Geim Radha Boya", "note": "Gas permeable", "ref_num": 40}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Tunable sieving of ions using graphene oxide membranes", "journal": "Nat Nano 2017 Rahul R. Nair", "note": "", "ref_num": 41}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Anomalously low dielectric constant of confined water", "journal": "Science 2018 Novoselov Geim", "note": "ε ~ 80 rotational freedom of water dipole", "ref_num": 42}, {"section": "3. Nanowire and Nanotube", "pmid_doi": "", "keyword": "", "title": "Cross-sectional imaging of individual layers and buried interfaces of graphene-based heterostructures and superlattices", "journal": "Nat Mater 2012 Roman Gorbachev", "note": "TEM images", "ref_num": 43}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "Ionic Diode", "title": "Nanofluidic Diode", "journal": "Nano Lett 2007 Siwy", "note": "", "ref_num": 44}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "", "title": "Rectification of Ionic Current in a Nanofluidic Diode", "journal": "Nano Lett 2007 Karnik", "note": "", "ref_num": 45}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "Ionic Transistors", "title": "Ionic field effect transistors with sub-10 nm multiple nanopores", "journal": "Nano Lett 2009 Nam", "note": "", "ref_num": 46}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "", "title": "Transmembrane voltage-gated nanopores controlled by electrically tunable in-pore chemistry", "journal": "Nat Comm 2025 Kawai", "note": "", "ref_num": 47}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "", "title": "Ionic transistors", "journal": "ACS Nano 2024 Kai Xiao", "note": "", "ref_num": 48}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "CMOS compatible", "title": "Field-effect reconfigurable nanofluidic ionic diodes", "journal": "Nat Comm 2011 Guan Reed", "note": "", "ref_num": 49}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "CMOS compatible", "title": "Electric Field Modulation of the Membrane Potential in Solid-State Ion Channels", "journal": "Nano Lett 2012 Guan Reed", "note": "", "ref_num": 50}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "Voltage gating", "title": "Voltage gated ion and molecule transport in engineered nanochannels: theory, fabrication and applications", "journal": "Nanotech 2014 Guan Reed", "note": "Pictures", "ref_num": 51}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "neuromorphic systems", "title": "Recent advances in fluidic neuromorphic computing", "journal": "Applied Physcis Rev 2025 Abel Santos", "note": "", "ref_num": 52}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "", "title": "Fluids and Electrolytes under Confinement in Single-Digit Nanopores", "journal": "Chem Rev 2023", "note": "", "ref_num": 53}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "logic", "title": "Nanofluidic Ionic Memristors", "journal": "ACS Nano 2024", "note": "", "ref_num": 54}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "", "title": "Neuromorphic iontronic devices based on soft ionic conductors", "journal": "Chem Soc Rec 2026", "note": "Review", "ref_num": 55}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "Ion transport, Coating", "title": "Towards explicit regulating-ion-transport: nanochannels with only function-elements at outer-surface", "journal": "Nat Comm 2021 Fan Xia", "note": "polyacrylic acid (PAA), poly(ethylene imine) (PEI)", "ref_num": 56}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "", "title": "Iontronic analog of synaptic plasticity: Hydrogel-based ionic diode with chemical precipitation and dissolution", "journal": "PNAS 2022 Chung TD", "note": "", "ref_num": 57}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "", "title": "Engineered voltage-responsive nanopores", "journal": "Chem Soc Rev 2010 Siwy", "note": "", "ref_num": 58}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "", "title": "Nanopore extended field-effect transistor for selective single-molecule biosensing", "journal": "Nat Comm 2017 Imperial", "note": "Review", "ref_num": 59}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "", "title": "Solid-state nanopore sensors", "journal": "Nat Rev Mater 2020", "note": "Review", "ref_num": 60}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "", "title": "Gate Manipulation of DNA Capture into Nanopores", "journal": "ACS Nano 2011 Kawai", "note": "", "ref_num": 61}, {"section": "4. Electrofluidics", "pmid_doi": "", "keyword": "rGO ion transistor", "title": "Atomic-scale ion transistor with ultrahigh diffusivity", "journal": "Science 2021 X Zhang", "note": "Berkeley, Hong Kong", "ref_num": 62}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "Nanopore DNA", "title": "Nanopore in metal-dielectric sandwich for DNA position control", "journal": "APL 2007", "note": "", "ref_num": 63}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "Blocking the ionic current", "title": "Sub-20 nm nanopore", "journal": "Nanoscale 2014", "note": "", "ref_num": 64}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Fast DNA Translocation through a Solid-State Nanopore", "journal": "Nano Lett 2005 Cees Dekker", "note": "", "ref_num": 65}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "Graphene", "title": "DNA Translocation through Graphene Nanopores", "journal": "Nano Lett 2010 Marija", "note": "Chris Merchant", "ref_num": 66}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "DNA Translocation through Graphene Nanopores", "journal": "Dekker", "note": "", "ref_num": 67}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Graphene Nanopore Fabrication and Applications", "journal": "2025 IJMS Rev", "note": "", "ref_num": 68}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Graphene as a subnanometre trans-electrode membrane", "journal": "Nature 2010 Slaven Garaj, Golovchenko", "note": "Figure, membrane figure", "ref_num": 69}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "signal-to-noise", "title": "A Low-Noise Solid-State Nanopore Platform Based on a Highly Insulating Substrate", "journal": "Sci Rep 2014 LeeMH", "note": "", "ref_num": 70}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Integrated nanopore sensing platform with sub-microsecond temporal resolution", "journal": "Nat Methods 2012 Jacob", "note": "", "ref_num": 71}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Improving signal-to-noise performance for DNA translocation in solid-state nanopores at MHz bandwidths", "journal": "Nano Lett 2014 Drndic", "note": "", "ref_num": 72}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Unlocking the Power of Nanopores: Recent Advances in Biosensing Applications and Analog Front-End", "journal": "Biosensors 2023", "note": "Reference Nat Methods 2012 Jacob", "ref_num": 73}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Rapid electronic detection of probe-specific microRNAs using thin nanopore sensors", "journal": "Nat Nanotech 2010 Wanunu", "note": "", "ref_num": 74}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "interrogating ATCG", "title": "Base-by-base ratcheting of single stranded DNA through a solid-state nanopore", "journal": "Phy Rev Lett 2010 Binquan", "note": "", "ref_num": 75}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "Santa Cruz", "title": "Rapid discrimination among individual DNA hairpin molecules at single-nucleotide resolution using an ion channel", "journal": "Nat Biotech 2001", "note": "", "ref_num": 76}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Characterization of individual polynucleotide molecules using a membrane channel", "journal": "PNAS 1996 Daniel Branton, David Deamer", "note": "", "ref_num": 77}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Rapid nanopore discrimination between singlepolynucleotide molecules", "journal": "PNAS 2000 Meller, Golovchenko, Branton", "note": "", "ref_num": 78}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Three decades of nanopore sequencing", "journal": "Nat Biotech 2016 David Deamer", "note": "", "ref_num": 79}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "Nanopore Sequencing", "title": "Decoding long nanopore sequencing reads of natural DNA", "journal": "Nat Biotech 2014 Jens H Gundlach", "note": "", "ref_num": 80}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Subangstrom single-molecule measurements of motor proteins using a nanopore", "journal": "Nat Biotech 2015 Jens H Gundlach", "note": "", "ref_num": 81}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "MspA nanopore as a single-molecule tool: From sequencing to SPRNT", "journal": "Methods 2016 Jens H Gundlach", "note": "", "ref_num": 82}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Continuous base identification for single-molecule nanopore DNA sequencing", "journal": "Nat Nanotech 2009 Hagan Bayley, Oxford nanopore", "note": "", "ref_num": 83}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Multi-pass, single-molecule nanopore reading of long protein strands", "journal": "Nature 2024", "note": "", "ref_num": 84}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "Nanopore Sequencing Review", "title": "Nanopore sequencing technology and its applications", "journal": "MedComm 2023 Shiwei Duan", "note": "Review, Reference Nanopore Seq", "ref_num": 85}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Nanopore sequencing technology, bioinformatics and applications", "journal": "Nat Biotech 2021  Kin Fai Au", "note": "Ohio Univ", "ref_num": 86}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Coming of age: ten years of next-generation sequencing technologies", "journal": "Nat Rev Genetics 2016 W. Richard McCombie", "note": "Cold Spring Harbor", "ref_num": 87}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Nanopore sequencing data analysis: state of the art, applications and challenges", "journal": "Briefings in Bioinformatics 2017", "note": "", "ref_num": 88}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Nanopore DNA sequencing technologies and their applications towards single-molecule proteomics", "journal": "Nat Chem 2024", "note": "", "ref_num": 89}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "", "title": "Beyond sequencing: machine learning algorithms extract biology hidden in Nanopore signal data", "journal": "Trends in Genetics 2022", "note": "", "ref_num": 90}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "Nanogap DNA detection", "title": "Single-molecule sensing electrode embedded in-plane nanopore", "journal": "Sci Rep 2011 Tomoji Kawai", "note": "Nanogap, PDMS chamber, Electrode", "ref_num": 91}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "Nanopore Review", "title": "Nanopore sensors for nucleic acid analysis", "journal": "Nat Nanotech 2011 Bashir", "note": "Review", "ref_num": 92}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "Book", "title": "Solid-State Nanopore Sensors for Nucleic Acid Analysis", "journal": "Bashir", "note": "Book", "ref_num": 93}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "Beyond DNA, thus protein", "title": "Nanopore-based technologies beyond DNA sequencing", "journal": "Nat Nano 2022 Maglia, Meller, Bayley, Dekker, Long", "note": "Review", "ref_num": 94}, {"section": "5. DNA transistors", "pmid_doi": "", "keyword": "retraction paper", "title": "DNA sequencing using electrical conductance measurements of a DNA polymerase", "journal": "Nat Nano 2013 Steven Huang, Taiwan", "note": "retraction paper", "ref_num": 95}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "Amorphous silicon", "title": "Wafer-scale integration of sacrificial nanofluidic chips for detecting and manipulating single DNA molecules", "journal": "Nat Comm 2017", "note": "", "ref_num": 96}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "Polymer", "title": "3D Sacrificial Microchannels by Scaffold Removal Process for Electrical Characterization of Electrolytes", "journal": "EML 2023", "note": "", "ref_num": 97}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "Polymer", "title": "Simple 3D Printed Scaffold-Removal Method for the Fabrication of Intricate Microfluidic Devices", "journal": "Adv Sci 2015 Vittorio Saggiomo", "note": "", "ref_num": 98}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "Sugar", "title": "Sucrose-based fabrication of 3D-networked, cylindrical microfluidic channels for rapid prototyping of lab-on-a-chip and vaso-mimetic devices", "journal": "Lab Chip 2012 Iowa Univ", "note": "", "ref_num": 99}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "", "title": "A rapid and simple fabrication method for 3-dimensional circular microfluidic channel using metal wire removal process", "journal": "Microfluidics and Nanofluidics 2010 JungHI", "note": "", "ref_num": 100}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "TMAH", "title": "Nanochannel fabrication for chemical sensors", "journal": "JVSTB 1997 Stern MIT Lincoln", "note": "", "ref_num": 101}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "XeF2 etching", "title": "Fast nonlinear ion transport via field-induced hydrodynamic slip in sub-20-nm hydrophilic nanofluidic transistors", "journal": "Nano Lett 2007 Udi Vermesh Heath", "note": "최장욱, Rong Fan", "ref_num": 102}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "XeF2 etching Not sacrificial", "title": "Rectified Ion Transport through Concentration Gradient in Homogeneous Silica Nanochannels", "journal": "Nano Lett 2007 LJ Guo", "note": "Poisson-Nernst-Planck (PNP) theory, SI", "ref_num": 103}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "", "title": "Fabrication of a Nanomechanical Mass Sensor Containing a Nanofluidic Channel", "journal": "Nano Lett 2010 Craighead", "note": "resonator", "ref_num": 104}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "", "title": "Confinement Spectroscopy: Probing Single DNA Molecules with Tapered Nanochannels", "journal": "Nano Lett 2009 Anders Kristensen", "note": "Denmark", "ref_num": 105}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "", "title": "Single-molecule denaturation mapping of DNA in nanofluidic channels", "journal": "PNAS 2010 Walter Reisner", "note": "McGill Univ, Reed College", "ref_num": 106}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "", "title": "Fabrication of sub-50 nm nanochannel array by an angle forming lift-off method", "journal": "Journal of Manufacturing Processes 2022", "note": "", "ref_num": 107}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "", "title": "Single Sub-20 nm Wide, Centimeter-Long Nanofluidic Channel Fabricated by Novel Nanoimprint Mold Fabrication and Direct Imprinting", "journal": "Nano Lett 2007 Stephen Chou", "note": "", "ref_num": 108}, {"section": "6. Sacrificial nanochannels", "pmid_doi": "", "keyword": "Nanogap", "title": "A progressive wafer scale approach for Sub-10 nm nanogap structures", "journal": "Sci Rep 2025 Sunghwan Kim", "note": "UNIST, SNU", "ref_num": 109}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "DLD review", "title": "Deterministic lateral displacement for particle separation: a review", "journal": "Lab Chip 2014, Helen Bridle", "note": "", "ref_num": 110}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "DLD review", "title": "A Review on Deterministic Lateral Displacement for Particle Separation and Detection", "journal": "Nano-Micro Letters 2019 Yong Zhang", "note": "Singapore", "ref_num": 111}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "Exosome therapeutics", "title": "Glioblastoma-derived exosomes as nanopharmaceutics for improved glioma treatment", "journal": "Pharmaceutics 2022 Chang", "note": "", "ref_num": 112}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "Exosome biogenesis", "title": "The biology, function, and biomedical applications of exosomes", "journal": "Science 2020 Raghu Kalluri", "note": "", "ref_num": 113}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "Exosome isolation", "title": "Microfluidics for exosome isolation and analysis: enabling liquid biopsy for personalized medicine", "journal": "Lab Chip 2017 Texas A&M Jose Contreras-Naranjo", "note": "", "ref_num": 114}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "Entropic trapping", "title": "A patterned anisotropic nanofluidic sieving structure for continuous-flow separation of DNA and proteins", "journal": "Nat Nanotech 2007 Fu Schoch Han", "note": "", "ref_num": 115}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "DLD", "title": "Continuous Particle Separation Through Deterministic Lateral Displacement", "journal": "Science 2004 Huang Cox Austin Sturm", "note": "", "ref_num": 116}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "", "title": "Hydrodynamic metamaterials: Microfabricated arrays to steer, refract, and focus streams of biomaterials", "journal": "PNAS 2008 Sturm Chou Austin", "note": "", "ref_num": 117}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "", "title": "The dynamics of genomic-length DNA molecules in 100-nm channels", "journal": "PNAS 2004 Austin", "note": "", "ref_num": 118}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "", "title": "Asymmetrical deterministic lateral displacement gaps for dual functions of enhanced separation and throughput of red blood cells", "journal": "Sci Rep 2016 Yong Zhang", "note": "Singapore", "ref_num": 119}, {"section": "7. Exosome", "pmid_doi": "", "keyword": "", "title": "DLD pillar shape design for efficient separation of spherical and non-spherical bioparticles", "journal": "Lab Chip 2014 Yong Zhang", "note": "Singapore", "ref_num": 120}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "fabricate mold", "title": "3D printed-mold, hemagglutination assay", "journal": "Biosensor 2023", "note": "", "ref_num": 121}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "Developmental devices", "title": "Xenopus chip", "journal": "BBRC 2021 Nam", "note": "", "ref_num": 122}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "Developmental devices", "title": "A patterned human neural tube model using microfluidic gradients", "journal": "Nature 2024 Jianping Fu", "note": "", "ref_num": 123}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "", "title": "Generation of spatially patterned human neural tube-like structures using microfluidic gradient devices", "journal": "Nat Protocoal 2027 Jianping Fu", "note": "", "ref_num": 124}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "3D printing", "title": "Fabrication of microfluidic devices by 3D printing: technology, materials, applications and prospects", "journal": "Results in Engineering 2025", "note": "recent review", "ref_num": 125}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "SU8", "title": "SU-8: a low-cost negative resist for MEMS", "journal": "J Micromech Microeng 1997", "note": "", "ref_num": 126}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "SU8", "title": "Micromachining applications of a high resolution ultrathick photoresist", "journal": "JVSTB 1995 LeeKY IBM Seegate", "note": "", "ref_num": 127}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "SU8", "title": "Fabrication of sub-100nm dual-gate MODFETS with enhanced performance", "journal": "Microelectro Eng 1991 LeeKY IBM", "note": "", "ref_num": 128}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "Organ-on-a-chip", "title": "Artificial Intelligence-Aided Microfluidic Cell Culture Systems", "journal": "Biosensors 2025 Minseok Kim page25, 6 figures, 3 tables ref 125", "note": "Organ-on-a-chip", "ref_num": 129}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "Prototype", "title": "The design and manufacture of massively scalable inertial focusing prototype microfluidic devices", "journal": "PLoS One 2025, Helen Bridle", "note": "", "ref_num": 130}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "", "title": "Comparative Evaluation of Commercial Filters and Ultrafiltration for Concentrating Cryptosporidium Oocysts and Giardia Cysts from Water Samples", "journal": "Water Air Soil Pollut 2024, Helen Bridle", "note": "", "ref_num": 131}, {"section": "8. Additive Technology", "pmid_doi": "", "keyword": "Electromigration", "title": "Fabrication of microstructures for studies of electromigration in sub-0.25 m metal interconnections", "journal": "JVSTB 1995 K. Y. Lee, C.-K. Hu, T. Shaw, and T. S. Kuan", "note": "TS Kuan", "ref_num": 132}, {"section": "9. Additional Review References", "pmid_doi": "", "keyword": "Nanofluidics - comprehensive review", "title": "Nanofluidics", "journal": "Nat Rev Methods Primers 2024", "note": "Overview: nanofabrication → nanopore sensing → ionic computing. Overview figure 참고 최적", "ref_num": 133}, {"section": "9. Additional Review References", "pmid_doi": "", "keyword": "Nanofluidics - perspective", "title": "Nanofluidics is on the rise", "journal": "Nature Materials 2020", "note": "Perspective article. Overview figure 구성 스타일 참고에 매우 유용", "ref_num": 134}, {"section": "9. Additional Review References", "pmid_doi": "", "keyword": "Ion transport - external fields", "title": "Ion transport in nanofluidics under external fields", "journal": "Chem Soc Rev 2024", "note": "External field (electric/chemical) 기반 이온 수송 총정리. Section 4 이론 배경", "ref_num": 135}, {"section": "9. Additional Review References", "pmid_doi": "", "keyword": "Solid-state nanopore - DNA sequencing", "title": "Advances and Challenges in Solid-State Nanopores for DNA Sequencing", "journal": "Langmuir 2024", "note": "DNA transistor 섹션 (Section 5) 최신 현황 보완", "ref_num": 136}, {"section": "9. Additional Review References", "pmid_doi": "", "keyword": "Exosome isolation - microfluidic chip", "title": "Isolation and detection of exosomes on microfluidic chips", "journal": "ScienceDirect 2025", "note": "DLD 및 반도체 칩 기반 엑소좀 분리 진단 최신 리뷰. Section 7", "ref_num": 137}, {"section": "9. Additional Review References", "pmid_doi": "", "keyword": "Biomimetic nanofluidics - ALD surface", "title": "Engineering Biomimetic Nanofluidics Toward High-Performance Osmotic Energy Harvesting", "journal": "Advanced Materials 2025", "note": "ALD 나노채널 표면 기능화 전략 참고. Section 2 ALD 보완", "ref_num": 138}, {"section": "그외 참고", "pmid_doi": "", "keyword": "", "title": "Respiratory Monitoring in Motion: An Overview of Wearable Methods and Algorithmic Approaches for Reliable Assessment", "journal": "Biosensors 2026 Review 27 pages", "note": "", "ref_num": 139}, {"ref_num": 140, "section": "9. Additional Review References", "title": "Unknown (v0.0.6 Ref.140)", "journal": "v0.0.6 Ref.140", "pmid_doi": "", "keyword": "", "note": "Truncated in v0.0.6 file"}];
+
+// ============================================================
+// STATE
+// ============================================================
+let currentSection = 'ALL';
+let depositOpen = true;
+
+// Load deposits from localStorage
+function loadDeposits() {
+  try { return JSON.parse(localStorage.getItem('nf_deposits') || '[]'); } catch(e) { return []; }
+}
+function saveDeposits(deps) {
+  localStorage.setItem('nf_deposits', JSON.stringify(deps));
+}
+function getDeposits() { return loadDeposits(); }
+
+// ============================================================
+// SECTION SWITCH
+// ============================================================
+function switchSection(id) {
+  currentSection = id;
+  document.querySelectorAll('.sec-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + id).classList.add('active');
+  document.getElementById('search-box').value = '';
+  renderList();
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function getFilteredRefs() {
+  const q = document.getElementById('search-box').value.toLowerCase();
+  const deps = getDeposits();
+  
+  if (currentSection === 'DEPOSIT') {
+    return deps.filter(r => !q || matchesQuery(r, q));
+  }
+  
+  let refs = BUILTIN_REFS;
+  if (currentSection !== 'ALL') {
+    const secName = SECTIONS.find(s => s.id === currentSection)?.name;
+    refs = refs.filter(r => r.section === secName);
+  }
+  if (q) refs = refs.filter(r => matchesQuery(r, q));
+  return refs;
+}
+
+function matchesQuery(r, q) {
+  return (r.title||'').toLowerCase().includes(q) ||
+         (r.journal||'').toLowerCase().includes(q) ||
+         (r.keyword||'').toLowerCase().includes(q) ||
+         (r.pmid_doi||'').toLowerCase().includes(q) ||
+         (r.note||'').toLowerCase().includes(q);
+}
+
+function renderList() {
+  const deps = getDeposits();
+  
+  // Update badges
+  SECTIONS.forEach(s => {
+    const count = BUILTIN_REFS.filter(r => r.section === s.name).length;
+    const el = document.getElementById('badge-' + s.id);
+    if (el) el.textContent = count;
+  });
+  document.getElementById('badge-ALL').textContent = BUILTIN_REFS.length;
+  document.getElementById('badge-DEPOSIT').textContent = deps.length;
+  document.getElementById('total-count').innerHTML = 'Total: <strong>' + (BUILTIN_REFS.length + deps.length) + '</strong> references';
+  
+  const refs = getFilteredRefs();
+  
+  // Topbar title
+  let title = 'All References';
+  if (currentSection === 'DEPOSIT') title = 'Deposit Queue';
+  else if (currentSection !== 'ALL') title = SECTIONS.find(s => s.id === currentSection)?.name || '';
+  document.getElementById('topbar-title').textContent = title + ' (' + refs.length + ')';
+  
+  // Stats
+  const statsRow = document.getElementById('stats-row');
+  if (currentSection === 'ALL') {
+    statsRow.innerHTML = SECTIONS.slice(0,9).map(s => {
+      const c = BUILTIN_REFS.filter(r => r.section === s.name).length;
+      return '<span class="stat-chip">' + s.short + ': ' + c + '</span>';
+    }).join('') + '<span class="stat-chip" style="background:#fef3c7;color:#92400e">⏳ Deposits: ' + deps.length + '</span>';
+  } else {
+    statsRow.innerHTML = '';
+  }
+  
+  // Deposit section
+  const sectionDeposits = currentSection === 'ALL' ? deps :
+    currentSection === 'DEPOSIT' ? deps :
+    deps.filter(r => {
+      const secName = SECTIONS.find(s => s.id === currentSection)?.name;
+      return r.section === secName;
+    });
+  
+  const depositSection = document.getElementById('deposit-section');
+  if (sectionDeposits.length > 0 && currentSection !== 'DEPOSIT') {
+    depositSection.style.display = 'block';
+    document.getElementById('deposit-list').innerHTML = depositOpen ? sectionDeposits.map((r,i) => renderDepositCard(r, i)).join('') : '';
+    document.getElementById('deposit-arrow').textContent = depositOpen ? '▲' : '▼';
+  } else {
+    depositSection.style.display = 'none';
+  }
+  
+  // Main ref list
+  const listEl = document.getElementById('ref-list');
+  if (currentSection === 'DEPOSIT') {
+    listEl.innerHTML = deps.length === 0 ?
+      '<div class="empty-state"><div class="icon">📥</div><p>No references in deposit queue yet.<br>Use <strong>+ Add Reference</strong> to deposit papers.</p></div>' :
+      deps.map((r,i) => renderDepositCard(r, i)).join('');
+  } else {
+    listEl.innerHTML = refs.length === 0 ?
+      '<div class="empty-state"><div class="icon">🔍</div><p>No references found.</p></div>' :
+      refs.map(r => renderRefCard(r)).join('');
+  }
+}
+
+function renderRefCard(r) {
+  const pmidTag = r.pmid_doi ? '<span class="ref-tag ' + (r.pmid_doi.includes('doi') ? 'doi' : 'pmid') + '">' + r.pmid_doi.substring(0,40) + '</span>' : '';
+  const kwTag = r.keyword ? '<span class="ref-tag">' + r.keyword.substring(0,30) + '</span>' : '';
+  const noteTag = r.note ? '<span class="ref-tag" title="' + r.note + '">📝</span>' : '';
+  return '<div class="ref-card">' +
+    '<div class="ref-top">' +
+    '<div class="ref-num">' + r.ref_num + '</div>' +
+    '<div class="ref-body">' +
+    '<div class="ref-title">' + escHtml(r.title || '(no title)') + '</div>' +
+    '<div class="ref-journal">' + escHtml(r.journal || '') + '</div>' +
+    '<div class="ref-meta">' + pmidTag + kwTag + noteTag + '</div>' +
+    '</div>' +
+    '<div class="ref-actions">' +
+    (r.pmid_doi && r.pmid_doi.includes('doi') ? '<button class="ref-action-btn" onclick="openDoi(\'' + escHtml(r.pmid_doi) + '\')">🔗 DOI</button>' : '') +
+    '<button class="ref-action-btn" onclick="copyRef(' + r.ref_num + ')">Copy</button>' +
+    '</div></div></div>';
+}
+
+function renderDepositCard(r, idx) {
+  return '<div class="ref-card deposit" style="margin-bottom:8px">' +
+    '<div class="ref-top">' +
+    '<div class="ref-num deposit-num">D' + (idx+1) + '</div>' +
+    '<div class="ref-body">' +
+    '<div class="ref-title">' + escHtml(r.title || '(no title)') + '</div>' +
+    '<div class="ref-journal">' + escHtml(r.journal || '') + '</div>' +
+    '<div class="ref-meta">' +
+    '<span class="ref-tag">' + escHtml(r.section || '') + '</span>' +
+    (r.keyword ? '<span class="ref-tag">' + escHtml(r.keyword) + '</span>' : '') +
+    (r.pmid_doi ? '<span class="ref-tag pmid">' + escHtml(r.pmid_doi.substring(0,40)) + '</span>' : '') +
+    '<span class="ref-tag" style="background:#fef3c7;color:#92400e">⏳ Deposit</span>' +
+    '</div>' +
+    (r.note ? '<div style="font-size:11px;color:#92400e;margin-top:4px">📝 ' + escHtml(r.note) + '</div>' : '') +
+    '</div>' +
+    '<div class="ref-actions">' +
+    '<button class="ref-action-btn" onclick="assignRef(' + idx + ')">Assign #</button>' +
+    '<button class="ref-action-btn del" onclick="deleteDeposit(' + idx + ')">✕ Remove</button>' +
+    '</div></div></div>';
+}
+
+function toggleDeposit() {
+  depositOpen = !depositOpen;
+  renderList();
+}
+
+// ============================================================
+// ADD MODAL
+// ============================================================
+let editingDepositIdx = -1;
+
+function openAddModal(sectionId) {
+  editingDepositIdx = -1;
+  if (sectionId) {
+    const sec = SECTIONS.find(s => s.id === sectionId);
+    if (sec) document.getElementById('form-section').value = sec.name;
+  } else if (currentSection !== 'ALL' && currentSection !== 'DEPOSIT') {
+    const sec = SECTIONS.find(s => s.id === currentSection);
+    if (sec) document.getElementById('form-section').value = sec.name;
+  }
+  document.getElementById('form-title').value = '';
+  document.getElementById('form-journal').value = '';
+  document.getElementById('form-pmid').value = '';
+  document.getElementById('form-keyword').value = '';
+  document.getElementById('form-note').value = '';
+  document.getElementById('form-status').value = 'deposit';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function submitRef() {
+  const title = document.getElementById('form-title').value.trim();
+  const journal = document.getElementById('form-journal').value.trim();
+  if (!title || !journal) { alert('Title and Journal/Author/Year are required.'); return; }
+  
+  const newRef = {
+    title, journal,
+    section: document.getElementById('form-section').value,
+    keyword: document.getElementById('form-keyword').value.trim(),
+    pmid_doi: document.getElementById('form-pmid').value.trim(),
+    note: document.getElementById('form-note').value.trim(),
+    added_at: new Date().toISOString(),
+  };
+  
+  const deps = getDeposits();
+  deps.push(newRef);
+  saveDeposits(deps);
+  closeModal();
+  renderList();
+  showToast('Reference added to deposit queue ✓');
+}
+
+// ============================================================
+// PDF HANDLING
+// ============================================================
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('pdf-drop').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') extractPdfMeta(file);
+}
+function handleDragOver(e) { e.preventDefault(); document.getElementById('pdf-drop').classList.add('drag-over'); }
+function handleDragLeave(e) { document.getElementById('pdf-drop').classList.remove('drag-over'); }
+function handleFileSelect(e) { const file = e.target.files[0]; if (file) extractPdfMeta(file); }
+
+function extractPdfMeta(file) {
+  // Extract metadata from filename
+  const name = file.name.replace('.pdf','').replace(/_/g,' ');
+  document.getElementById('form-title').value = name;
+  document.getElementById('pdf-drop').innerHTML = '✅ ' + file.name + '<br><small style="color:#94a3b8">Fill in journal/author/year below</small>';
+  document.getElementById('form-journal').focus();
+}
+
+// ============================================================
+// DEPOSIT ACTIONS
+// ============================================================
+function deleteDeposit(idx) {
+  if (!confirm('Remove this deposit?')) return;
+  const deps = getDeposits();
+  deps.splice(idx, 1);
+  saveDeposits(deps);
+  renderList();
+  showToast('Deposit removed');
+}
+
+function assignRef(idx) {
+  const deps = getDeposits();
+  const r = deps[idx];
+  const nextNum = prompt('Assign reference number (next available: ' + (BUILTIN_REFS.length + 1) + '):', BUILTIN_REFS.length + 1);
+  if (nextNum && !isNaN(nextNum)) {
+    showToast('Ref [' + nextNum + '] assigned — update Excel & re-run manuscript script');
+    deps[idx].assigned_num = parseInt(nextNum);
+    saveDeposits(deps);
+    renderList();
+  }
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+let currentExportText = '';
+
+function openExport() {
+  document.getElementById('export-panel').classList.add('open');
+  exportFormat('numbered');
+}
+function closeExport(e) {
+  if (!e || e.target === document.getElementById('export-panel'))
+    document.getElementById('export-panel').classList.remove('open');
+}
+
+function exportFormat(fmt) {
+  const refs = currentSection === 'ALL' ? BUILTIN_REFS :
+    BUILTIN_REFS.filter(r => r.section === SECTIONS.find(s => s.id === currentSection)?.name);
+  const deps = getDeposits();
+  let out = '';
+  
+  if (fmt === 'numbered') {
+    out = refs.map(r => '[' + r.ref_num + '] ' + (r.title || '') + '. ' + (r.journal || '') + (r.pmid_doi ? ' | ' + r.pmid_doi : '')).join('\n');
+    if (deps.length > 0) {
+      out += '\n\n--- DEPOSIT QUEUE ---\n';
+      out += deps.map((r,i) => '[D' + (i+1) + '] ' + (r.title||'') + '. ' + (r.journal||'') + '  (Section: ' + r.section + ')').join('\n');
+    }
+  } else if (fmt === 'section') {
+    SECTIONS.forEach(s => {
+      const sr = BUILTIN_REFS.filter(r => r.section === s.name);
+      if (sr.length === 0) return;
+      out += '\n=== ' + s.name + ' (' + sr.length + ' refs) ===\n';
+      out += sr.map(r => '[' + r.ref_num + '] ' + (r.journal||'') + ' — ' + (r.title||'').substring(0,80)).join('\n');
+      out += '\n';
+    });
+    if (deps.length > 0) {
+      out += '\n=== DEPOSIT QUEUE (' + deps.length + ') ===\n';
+      out += deps.map((r,i) => '[D' + (i+1) + '] ' + r.section + ' | ' + (r.journal||'') + ' — ' + (r.title||'')).join('\n');
+    }
+  } else if (fmt === 'manuscript') {
+    out = '--- For manuscript [ref. ?] filling ---\n\n';
+    SECTIONS.forEach(s => {
+      const sr = BUILTIN_REFS.filter(r => r.section === s.name);
+      if (sr.length === 0) return;
+      out += s.name + ':\n';
+      out += sr.map(r => '[ref. ' + (r.journal||'') + ']  →  Ref #' + r.ref_num).join('\n');
+      out += '\n\n';
+    });
+  }
+  
+  currentExportText = out.trim();
+  document.getElementById('export-text').value = currentExportText;
+}
+
+function copyExport() {
+  navigator.clipboard.writeText(currentExportText).then(() => showToast('Copied to clipboard ✓'));
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function copyRef(refNum) {
+  const r = BUILTIN_REFS.find(x => x.ref_num === refNum);
+  if (r) {
+    const txt = '[' + r.ref_num + '] ' + (r.journal||'') + ' — ' + (r.title||'');
+    navigator.clipboard.writeText(txt).then(() => showToast('Ref [' + refNum + '] copied ✓'));
+  }
+}
+
+function openDoi(doi) {
+  const url = doi.startsWith('http') ? doi : 'https://' + doi;
+  window.open(url, '_blank');
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderList();
+</script>
+</body>
+</html>
